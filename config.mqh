@@ -17,6 +17,9 @@ extern double martingale_targetProfitTotalPips = 0; //  0 means disbale
 
 extern double zonecap_targetProfitForEachOrder = 3;
 
+extern int martingale_lastordermin = 20; // 20 means 20 minutes before the last recover order
+extern int martingale_startrecover = 5; // 5 means start martingale logic after 5 minute
+
 extern int maxrecoverypair = 5;
 extern int maxopenedpair = 6;
 

@@ -70,9 +70,9 @@ int SenKouSpanB;
 
         datetime lastopentime = OrderOpenTime();
         
-        if (orderi == 1 && TimeCurrent() - lastopentime < 5 * 60)
+        if (orderi == 1 && TimeCurrent() - lastopentime < martingale_startrecover * 60)
             return -1;
-        if (orderi > 1 && TimeCurrent() - lastopentime < 20 * 60)
+        if (orderi > 1 && TimeCurrent() - lastopentime < martingale_lastordermin * 60)
             return -1;
         
         //Print("Last open time: " + lastopentime + " C: " + OrderComment());
