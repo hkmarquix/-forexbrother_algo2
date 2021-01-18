@@ -29,6 +29,10 @@ extern int use_marquisbasicstochasticmethod = 1;
 extern int usebasicentry = 0;
 
 extern int defaulttrademode = 1;
+
+extern double adxfilter_value = 22;
+
+
 int currenttrademode = 1;
 
 /* 

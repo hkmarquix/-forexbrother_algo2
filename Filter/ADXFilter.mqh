@@ -31,11 +31,8 @@ class ADXFilter : public BaseFilter {
     void Refresh()
     {
        signal = actiontype;
-       double atr = iATR(symbol, period, 14, 0) * of_getcurrencrymultipier(symbol);
-       if (atr < 20)
-         signal = -1;
        double adx = iADX(symbol, period, 14, PRICE_CLOSE, MODE_MAIN, 0);
-       if (adx < 24)
+       if (adx < adxfilter_value)
          signal = -1;
 
     }
