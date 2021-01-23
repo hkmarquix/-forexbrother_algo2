@@ -14,12 +14,12 @@ extern bool boundMartingaleLotsizenotsmallerthanLastOrder = true;
 extern double martingale_targetProfitForEachOrder = 0; // 0 means disbale
 extern double martingale_targetProfitForEachLot = 0; // 0 means disbale ::::: each 0.01 lot !!!!!!!!!!!!
 extern double martingale_targetProfitTotalPips = 8; //  0 means disbale ::: << this will set TP for each order
-extern double martingale_targetProfitDropForEachOrder = 2; // 0 means disable : targetProfitDropForEachOrder
+extern double martingale_targetProfitDropForEachOrder = 1; // 0 means disable : targetProfitDropForEachOrder
 
 double zonecap_targetProfitForEachOrder = 3;
 
-extern int martingale_lastordermin = 5; // 20 means 20 minutes before the last recover order
-extern int martingale_startrecover = 5; // 5 means start martingale logic after 5 minute
+extern int martingale_lastordermin = 2; // 20 means 20 minutes before the last recover order
+extern int martingale_startrecover = 2; // 5 means start martingale logic after 5 minute
 
 extern int maxrecoverypair = 5;
 extern int maxopenedpair = 6;
