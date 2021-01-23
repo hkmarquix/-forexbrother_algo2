@@ -120,6 +120,7 @@ class TradeHelper {
                 Print("Create order now " + bsignal.signal + "/" + curprice + "/" + bsignal.stoploss + "/" + bsignal.takeprofit + "/" + bsignal.signalname);
                 tf_createorder(symbol, bsignal.signal, initlots, "1", "", bsignal.stoploss, bsignal.takeprofit, bsignal.signalname, magicNumber);
                 trademode = presettrademode;
+                of_calTakeProfitOnAllOrders(symbol, magicNumber);
                 return;
             }
         }

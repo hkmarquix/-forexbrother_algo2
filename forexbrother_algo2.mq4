@@ -9,8 +9,10 @@
 #property strict
 
 #include "config.mqh"
+#include "TradeInclude\writelog.mqh"
 #include "TradeInclude\tradefunction.mqh"
 #include "TradeInclude\orderfunction.mqh"
+#include "TradeInclude\macdcrossover.mqh"
 #include "SelfAdd\MTradeHelper.mqh"
 
 enum signalidlist {
@@ -46,6 +48,7 @@ int curperiod_arr[];
 int curzone_arr[];
 int currecover_arr[];
 int curtrademode_arr[];
+
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -122,6 +125,7 @@ void OnTick()
       {
          MTradeHelper *tHelper = curPairs[i];
          tHelper.refreshRobot();
+         
       }
     
     processOrders = 0;

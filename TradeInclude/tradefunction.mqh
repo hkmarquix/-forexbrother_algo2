@@ -34,6 +34,21 @@ int tf_countAllOrders(string symbol, int magicNumber) {
     return torders;
 }
 
+int tf_countAllOrdersWithOrderType(string symbol, int magicNumber, int ordertype) {
+
+    int torders = 0;
+    for (int i = OrdersTotal() - 1; i >= 0; i--) {
+        OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
+        if (OrderMagicNumber() != magicNumber || OrderSymbol() != symbol)
+            continue;
+        if (OrderType() != ordertype)
+            continue;
+
+        torders++;
+    }
+    return torders;
+}
+
 
 void tf_createorder(string symbol, int ordertype, double lots, string orderi, string tradeparam, double stoploss, double takeprofit, string entrymethod, int magicNumber) {
     int ticket = 0;
@@ -174,6 +189,21 @@ bool tf_findFirstOrder(string symbol, int magicnumber) {
     return false;
 }
 
+bool tf_findFirstOrderWithOrderType(string symbol, int magicnumber, int orderType) {
+    for (int i = 0; i < OrdersTotal(); i++) {
+        OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
+        if (OrderMagicNumber() != magicnumber || OrderSymbol() != symbol)
+            continue;
+        if (OrderType() != orderType )
+            continue;
+        int curComment = StringToInteger(OrderComment());
+        if (curComment == 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
 string tf_commentencode(string message, string ea, int orderi, string remark)
 {
     string comment = StringFormat("%s|%s|%d|%s", message, ea, orderi, remark);
@@ -234,6 +264,25 @@ double tf_averageOpenPrice(string symbol, int magicNumber)
         if (OrderMagicNumber() != magicNumber || OrderSymbol() != symbol)
             continue;
         if (OrderType() != OP_BUY && OrderType() != OP_SELL)
+            continue;
+        temptotal += OrderLots() * OrderOpenPrice();
+        temptotallots += OrderLots();
+    }
+    //Print("Temp total: " + temptotal + " total lots: " + temptotallots);
+    if (temptotallots == 0)
+        return 0;
+    return temptotal / temptotallots;
+}
+
+double tf_averageOpenPriceWithOrderType(string symbol, int magicNumber, int orderType)
+{
+    double temptotal;
+    double temptotallots;
+    for (int i = 0; i < OrdersTotal(); i++) {
+        OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
+        if (OrderMagicNumber() != magicNumber || OrderSymbol() != symbol)
+            continue;
+        if (OrderType() != orderType)
             continue;
         temptotal += OrderLots() * OrderOpenPrice();
         temptotallots += OrderLots();

@@ -46,7 +46,7 @@ class Zonecap : public BaseRecovery {
 
         double diff = MathAbs(cprice - lastprice) * of_getcurrencrymultipier(symbol);
 
-        if (diff > curzone)
+        if (diff > currecover)
         {
             int newordertype = -1;
             if (OrderType() == OP_BUY)
@@ -60,10 +60,8 @@ class Zonecap : public BaseRecovery {
             double newlots = MathAbs(tlotsoftype - tlotsofopptype + OrderLots()) * 1.5;
             if (newlots > lotincrease_step * 10)
                 newlots = MathAbs(tlotsoftype - tlotsofopptype + OrderLots()) * 1.1;
-
-            
-
             tf_createorder(symbol, newordertype, newlots, IntegerToString(neworderi), "", 0, 0, recoveryname, magicNumber);
+            setTakeProfitForZoneCapOrder(symbol, magicNumber, 0);
             return 1;
         }
 
@@ -80,6 +78,22 @@ class Zonecap : public BaseRecovery {
         }
 
         return -1;
+    }
+    
+    void setTakeProfitForZoneCapOrder(string _symbol, int _magicNumber, double _totalProfit)
+    {
+        double average_buyprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, OP_BUY);
+        double average_sellprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, OP_SELL);
+        
+        of_selectlastorder(symbol, magicNumber);
+        if (OrderType() == OP_SELL)
+        {
+            
+        }
+        else if (OrderType() == OP_BUY)
+        {
+        
+        }
     }
 
 

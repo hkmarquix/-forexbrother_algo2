@@ -39,6 +39,15 @@ class TimeFilter : public BaseFilter {
            signal = -1;
        }
 
+       if (TimeHour(TimeCurrent() >= 22))
+       {
+         signal = -1;
+       }
+       if (TimeHour(TimeCurrent() <= 3))
+       {
+         signal = -1;
+       }
+
     }
 
 };

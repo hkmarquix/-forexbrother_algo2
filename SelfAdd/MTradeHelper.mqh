@@ -16,7 +16,7 @@
 
 class MTradeHelper : public TradeHelper {
     private:
-            
+            Martingale *martin;
     public:
         
     MTradeHelper() {
@@ -25,6 +25,7 @@ class MTradeHelper : public TradeHelper {
 
 // self modify
     void initHelper() {
+    martin = new Martingale();
         totalsignal = 0;
         if (usebasicentry == 1)
             totalsignal++;
@@ -37,6 +38,9 @@ class MTradeHelper : public TradeHelper {
         
     }
 
+   ~MTradeHelper() {
+      delete(martin);
+   }
 
 // self modify
     void initSignal(int currentsignali) {
@@ -78,7 +82,7 @@ class MTradeHelper : public TradeHelper {
 // Self include this and modify
     bool createOrderFilter(int signal, double lotsize)
     {
-        TimeFilter *tf = new TimeFilter();
+        /*TimeFilter *tf = new TimeFilter();
         tf.symbol = symbol;
         tf.period = period;
         tf.actiontype = signal;
@@ -119,7 +123,7 @@ class MTradeHelper : public TradeHelper {
             //Print("Order filtered by closetimefilter");
             return false;
         }
-
+*/
         return true;
     }
 
@@ -145,7 +149,7 @@ class MTradeHelper : public TradeHelper {
     {
         if (trademode == martingale)
         {
-            Martingale *martin = new Martingale();
+            //Martingale *martin = new Martingale();
             martin.period = PERIOD_M1;
             martin.symbol = symbol;
             martin.magicNumber = magicNumber;
@@ -158,7 +162,7 @@ class MTradeHelper : public TradeHelper {
                trademode = zonecap;
             }
             
-            delete(martin);
+            //delete(martin);
         } else if (trademode == zonecap)
         {
             Zonecap *zc = new Zonecap();
