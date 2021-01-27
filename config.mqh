@@ -13,8 +13,11 @@ extern bool boundMartingaleLotsizenotsmallerthanLastOrder = true;
 
 extern double martingale_targetProfitForEachOrder = 0; // 0 means disbale
 extern double martingale_targetProfitForEachLot = 0; // 0 means disbale ::::: each 0.01 lot !!!!!!!!!!!!
-extern double martingale_targetProfitTotalPips = 8; //  0 means disbale ::: << this will set TP for each order
-extern double martingale_targetProfitDropForEachOrder = 1; // 0 means disable : targetProfitDropForEachOrder
+extern double martingale_targetProfitTotalPips = 0; //  0 means disbale ::: << this will set TP for each order
+extern double martingale_targetProfitDropForEachOrder = 0; // 0 means disable : targetProfitDropForEachOrder
+
+extern double martingale_profitprotectiontrigger = 11;
+extern double martingale_profitprotectionaddon = 8;
 
 double zonecap_targetProfitForEachOrder = 3;
 
@@ -47,8 +50,11 @@ int currenttrademode = 1;
 
 int maxCommentLevel = 20;
 
-extern string curlist = "XAUUSD"; // it can be :  XAUUSD,EURUSD,USDJPY
-extern string curperiod = "M1"; // it can be : M1,M15,H1
-extern string curtrademode = "1"; // it can be : 1,2,2
-extern string curzonerecover = "450";
-extern string curzone = "100";
+extern string curlist = "XAUUSD,XAUUSD"; // curlist ex:  XAUUSD,EURUSD,USDJPY
+extern string curordertype = "0,1"; // ordertype: 0 -> Buy; 1 -> Sell; 2 -> Both
+extern string curmagicnumber = "18000,19000"; // magicnumber list
+extern string curmaxorderno = "10,10"; // max no of order
+extern string curperiod = "M1,M1"; // period, ex: M1,M15,H1
+extern string curtrademode = "1"; // trademode, 1 -> martin; 2-> zone cap
+extern string curzonerecover = "450,450"; // zonecap range 
+extern string curzone = "100,100"; // martin range

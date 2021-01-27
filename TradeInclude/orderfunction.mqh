@@ -142,7 +142,7 @@ int of_getcurrencrymultipier(string symbol)
          return;
      if (!of_selectlastorder(symbol, magicNumber))
          return;
-     int totalorders = tf_countAllOrdersWithOrderType(symbol, magicNumber, OrderType());
+     int totalorders = tf_countAllOrders(symbol, magicNumber);
      //martingale_targetProfitTotalPips
      double averageopenprice = tf_averageOpenPrice(symbol, magicNumber);
      if (averageopenprice == 0)
@@ -173,7 +173,47 @@ int of_getcurrencrymultipier(string symbol)
          newprice = averageopenprice - diffx;
      }
 
-     tf_setTakeProfitStopLoss(symbol, OrderType(), magicNumber, 0, newprice);
+     tf_setTakeProfitStopLoss(symbol, OrderType(), magicNumber, -1, newprice);
+ }
+ 
+ void of_calTakeProfitOnAllOrdersWithOrderType(string symbol, int magicNumber, int ordertype)
+ {
+     if (martingale_targetProfitTotalPips <= 0)
+         return;
+     if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
+         return;
+     int totalorders = tf_countAllOrdersWithOrderType(symbol, magicNumber, ordertype);
+     //martingale_targetProfitTotalPips
+     double averageopenprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, ordertype);
+     if (averageopenprice == 0)
+     {
+         Print("Invalid average open price");
+         return;
+     }
+     double closeprice = 0;
+     double newprice = 0;
+     
+     double diffx = martingale_targetProfitTotalPips * 10 / (double)of_getcurrencrymultipier(symbol) -
+                        martingale_targetProfitDropForEachOrder * 10 / (double)of_getcurrencrymultipier(symbol) * totalorders;
+      if (diffx < 0)
+         diffx = 0;
+      
+         
+     if (OrderType() == OP_BUY)
+     {
+         closeprice = MarketInfo(symbol, MODE_BID);
+         
+         
+         newprice = averageopenprice + diffx;
+     }
+     else if (OrderType() == OP_SELL)
+     {
+         closeprice = MarketInfo(symbol, MODE_ASK);
+         
+         newprice = averageopenprice - diffx;
+     }
+
+     tf_setTakeProfitStopLoss(symbol, ordertype, magicNumber, -1, newprice);
  }
  
  

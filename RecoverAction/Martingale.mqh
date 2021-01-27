@@ -10,8 +10,10 @@ class Martingale : public BaseRecovery {
       double price_distance;
       bool sellAfterBandClosed;
       bool buyAfterBandClosed;
+      datetime lastchecking;
 
     public:
+      int ordertype;
 
     Martingale() {
 
@@ -19,6 +21,8 @@ class Martingale : public BaseRecovery {
     }
 
     void initHelper() {
+    lastchecking = TimeCurrent();
+    ordertype = -1;
     sellAfterBandClosed = false;
     buyAfterBandClosed = false;
          strict_level = 1;
@@ -32,11 +36,8 @@ class Martingale : public BaseRecovery {
 
     int simplyDoRecovery()
     {
-        double topenorders = tf_countAllOrders(symbol, magicNumber);
-        if (!of_selectlastorder(symbol, magicNumber))
-            return -1;
-
-        if (OrderProfit() > 0)
+        double topenorders = tf_countAllOrdersWithOrderType(symbol, magicNumber, ordertype);
+        if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
             return -1;
 
         string param[];
@@ -66,12 +67,14 @@ class Martingale : public BaseRecovery {
     }
 
     int doRecovery() {
-        double topenorders = tf_countAllOrders(symbol, magicNumber);
-        if (!of_selectlastorder(symbol, magicNumber))
+        double topenorders = tf_countAllOrdersWithOrderType(symbol, magicNumber, ordertype);
+        if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
         {
             return -1;
         }
-
+        
+        checkLastOrderForProfitProtection();
+        
         if (OrderProfit() > 0) {
             return -1;
         }
@@ -114,7 +117,7 @@ class Martingale : public BaseRecovery {
             double newlots = wilsonNewMartingaleLotsizeCalculation(topenorders, OrderLots());
             writelog_writeline("Do martingale now..." + neworderi);
             tf_createorder(symbol, OrderType(), newlots, IntegerToString(neworderi), "", 0, 0, recoveryname, magicNumber);
-            of_calTakeProfitOnAllOrders(symbol, magicNumber);
+            of_calTakeProfitOnAllOrdersWithOrderType(symbol, magicNumber, ordertype);
             return 1;
         }
         
@@ -163,12 +166,12 @@ class Martingale : public BaseRecovery {
 
     int takeProfitForEachLot()
     {
-        double tlots = tf_countAllLots(symbol, magicNumber) * 100;
+        double tlots = tf_countAllLotsWithOrderType(symbol, magicNumber, ordertype) * 100;
         double targetprofit = tlots * martingale_targetProfitForEachLot;
         double totalprofit = tf_orderTotalProfit(symbol, magicNumber);
         if (totalprofit >= targetprofit)
         {
-            tf_closeAllOrders(symbol, magicNumber);
+            tf_closeAllOrdersWithOrderType(symbol, magicNumber, ordertype);
             return 1;
         }
         return -1;
@@ -176,12 +179,12 @@ class Martingale : public BaseRecovery {
 
     int takeProfitForEachOrder()
     {
-        int torders = tf_countAllOrders(symbol, magicNumber);
+        int torders = tf_countAllOrdersWithOrderType(symbol, magicNumber, ordertype);
         double targetprofit = torders * martingale_targetProfitForEachOrder;
         double totalprofit = tf_orderTotalProfit(symbol, magicNumber);
         if (totalprofit >= targetprofit)
         {
-            tf_closeAllOrders(symbol, magicNumber);
+            tf_closeAllOrdersWithOrderType(symbol, magicNumber, ordertype);
             return 1;
         }
         return -1;
@@ -189,10 +192,10 @@ class Martingale : public BaseRecovery {
 
     int takeProfitWithTakeProfitPips()
     {
-        if (!of_selectlastorder(symbol, magicNumber))
+        if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
             return -1;
         //martingale_targetProfitTotalPips
-        double averageopenprice = tf_averageOpenPrice(symbol, magicNumber);
+        double averageopenprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, ordertype);
         if (averageopenprice == 0)
         {
             Print("Invalid average open price");
@@ -216,7 +219,7 @@ class Martingale : public BaseRecovery {
 
         if (diff * tf_getCurrencryMultipier(symbol) > martingale_targetProfitTotalPips * 10)
         {
-            tf_closeAllOrders(symbol, magicNumber);
+            tf_closeAllOrdersWithOrderType(symbol, magicNumber, ordertype);
             return 1;
         }
         
@@ -301,5 +304,59 @@ class Martingale : public BaseRecovery {
 
         return ntlots;
     }
+    
+    bool checkLastOrderForProfitProtection()
+    {
+         if (TimeCurrent() - lastchecking <= 5)
+            return false;
+         lastchecking = TimeCurrent();
+      
+         double closeprice;
+         double diff;
+         
+         double averageopenprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, OrderType());
+         if (OrderType() == OP_BUY)
+        {
+            closeprice = MarketInfo(symbol, MODE_BID);
+            diff = closeprice - averageopenprice;
+        }
+        else if (OrderType() == OP_SELL)
+        {
+            closeprice = MarketInfo(symbol, MODE_ASK);
+            diff = averageopenprice - closeprice;
+
+        }
+        
+        
+        
+        double newprice = 0;
+        if (OrderType() == OP_BUY) {
+            newprice = closeprice - martingale_profitprotectionaddon * 10 /  tf_getCurrencryMultipier(symbol);
+            if (newprice < OrderStopLoss())
+               return false;
+        }
+        else {
+            newprice = closeprice + martingale_profitprotectionaddon * 10 /  tf_getCurrencryMultipier(symbol);
+            if (newprice > OrderStopLoss())
+               return false;
+        }
+        
+               
+        //Print(OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + closeprice);
+        if (diff *  tf_getCurrencryMultipier(symbol) > martingale_profitprotectiontrigger * 10)
+        {
+            // set order protection
+            
+            //Print("Update now");
+            //OrderModify(OrderTicket(), OrderOpenPrice(), newprice, 0, 0, Green);
+            tf_setTakeProfitStopLoss(symbol, OrderType(), magicNumber, newprice, 0);
+            //simplyDoRecovery();
+            return true;
+        }
+        return false;
+    }
+    
+    
+    
 
 };

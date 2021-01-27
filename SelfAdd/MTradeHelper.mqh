@@ -31,6 +31,16 @@ class MTradeHelper : public TradeHelper {
             totalsignal++;
         if (use_marquisbasicstochasticmethod == 1)
             totalsignal++;
+        
+        if (fixedordertype == 2) {
+         buyorder = 1;
+         sellorder = 1;
+        }
+        else if (fixedordertype == OP_BUY)
+         buyorder = 1;
+        else if (fixedordertype == OP_SELL)
+         sellorder = 1;
+            
         Print("Total signal size: " + totalsignal);
         ArrayResize(signalist, totalsignal , 0);
 
@@ -145,32 +155,25 @@ class MTradeHelper : public TradeHelper {
 
 
 // Self include this and modify
-    void checkRecoverAction()
+    void checkRecoverAction(int _magicnumber, int _ordertype)
     {
         if (trademode == martingale)
         {
-            //Martingale *martin = new Martingale();
-            martin.period = PERIOD_M1;
+            martin.period = period;
             martin.symbol = symbol;
-            martin.magicNumber = magicNumber;
+            martin.ordertype = _ordertype;
+            martin.magicNumber = _magicnumber;
             martin.curzone = curzone;
-            martin.currecover = currecover;
             martin.takeProfit();
-            int res = martin.doRecovery();
-            if (res == 2)
-            {
-               trademode = zonecap;
-            }
+            martin.doRecovery();
             
-            //delete(martin);
         } else if (trademode == zonecap)
         {
             Zonecap *zc = new Zonecap();
             zc.period = period;
             zc.symbol = symbol;
-            zc.magicNumber = magicNumber;
+            zc.magicNumber = _magicnumber;
             zc.curzone = curzone;
-            zc.currecover = currecover;
             zc.takeProfit();
             zc.doRecovery();
             

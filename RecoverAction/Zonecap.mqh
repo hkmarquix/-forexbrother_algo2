@@ -54,8 +54,8 @@ class Zonecap : public BaseRecovery {
             else if (OrderType() == OP_SELL)
                 newordertype = OP_BUY;
                 
-            double tlotsoftype = tf_countAllLotsWithActionType(OrderType(), symbol, magicNumber);
-            double tlotsofopptype = tf_countAllLotsWithActionType(newordertype, symbol, magicNumber);
+            double tlotsoftype = tf_countAllLotsWithOrderType(symbol, magicNumber, OrderType());
+            double tlotsofopptype = tf_countAllLotsWithOrderType(symbol, magicNumber, newordertype);
             int neworderi = StrToInteger(param[2]) + 1;
             double newlots = MathAbs(tlotsoftype - tlotsofopptype + OrderLots()) * 1.5;
             if (newlots > lotincrease_step * 10)

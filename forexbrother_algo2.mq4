@@ -14,6 +14,7 @@
 #include "TradeInclude\orderfunction.mqh"
 #include "TradeInclude\macdcrossover.mqh"
 #include "SelfAdd\MTradeHelper.mqh"
+#include "TradeInclude\stringfunction.mqh"
 
 enum signalidlist {
     basicentryid=1012,
@@ -44,6 +45,9 @@ MTradeHelper *tHelper;
 MTradeHelper *curPairs[];
 
 string curlist_arr[];
+int curordertype_arr[];
+int curmagicnumber_arr[];
+int curmaxorderno_arr[];
 int curperiod_arr[];
 int curzone_arr[];
 int currecover_arr[];
@@ -70,16 +74,21 @@ int OnInit()
       convertCurrecover();
       convertCurtrademode();
       convertCurperiod();
-
+      convertOrderType();
+      convertMagicNumber();
+      convertMaxOrderNo();
+     
       StringSplit(curlist, StringGetCharacter(",", 0), curlist_arr);
       ArrayResize(curPairs, ArraySize(curlist_arr), 0);
-      if (IsTesting())
-        ArrayResize(curPairs, 1, 0);
+      //if (IsTesting())
+      //  ArrayResize(curPairs, 1, 0);
       for (int i = 0; i < ArraySize(curlist_arr); i++)
       {
          string cur = curlist_arr[i];
          tHelper = new MTradeHelper();
-         tHelper.magicNumber = default_magicNumber;
+         tHelper.magicNumber = curmagicnumber_arr[i];
+         tHelper.maxorderno = curmaxorderno_arr[i];
+         tHelper.fixedordertype = curordertype_arr[i];
          tHelper.symbol = cur;
          tHelper.period = curperiod_arr[i];
          tHelper.curzone = curzone_arr[i];
@@ -89,10 +98,10 @@ int OnInit()
          tHelper.initHelper();
          curPairs[i] = tHelper;
 
-         Print("TradeHelper init: " + cur + "/" + curperiod_arr[i]);
+         Print("TradeHelper init: " + cur + "/" + curperiod_arr[i] + " :: " + tHelper.magicNumber + "::" + tHelper.fixedordertype);
 
-         if (IsTesting())
-           break;
+         //if (IsTesting())
+         //  break;
       }
   }
   
@@ -134,35 +143,33 @@ void OnTick()
 
   void convertCurzone()
   {
-    string t_arr[];
-    StringSplit(curzone, StringGetCharacter(",", 0), t_arr);
-    ArrayResize(curzone_arr, ArraySize(t_arr), 0);
-    for (int i = 0; i < ArraySize(t_arr); i++)
-    {
-      curzone_arr[i] = StringToInteger(t_arr[i]);
-    }
+    stringfunc_string2intarr(curzone, curzone_arr);
   }
 
   void convertCurrecover()
   {
-    string t_arr[];
-    StringSplit(curzonerecover, StringGetCharacter(",", 0), t_arr);
-    ArrayResize(currecover_arr, ArraySize(t_arr), 0);
-    for (int i = 0; i < ArraySize(t_arr); i++)
-    {
-      currecover_arr[i] = StringToInteger(t_arr[i]);
-    }
+      stringfunc_string2intarr(curzonerecover, currecover_arr);
   }
 
   void convertCurtrademode()
   {
-    string t_arr[];
-    StringSplit(curtrademode, StringGetCharacter(",", 0), t_arr);
-    ArrayResize(curtrademode_arr, ArraySize(t_arr), 0);
-    for (int i = 0; i < ArraySize(t_arr); i++)
-    {
-      curtrademode_arr[i] = StringToInteger(t_arr[i]);
-    }
+   stringfunc_string2intarr(curtrademode, curtrademode_arr);
+    
+  }
+  
+  void convertOrderType()
+  {
+   stringfunc_string2intarr(curordertype, curordertype_arr);
+  }
+  
+  void convertMagicNumber()
+  {
+   stringfunc_string2intarr(curmagicnumber, curmagicnumber_arr);
+  }
+  
+  void convertMaxOrderNo()
+  {
+   stringfunc_string2intarr(curmaxorderno, curmaxorderno_arr);
   }
 
   void convertCurperiod()

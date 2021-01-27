@@ -9,6 +9,7 @@
 #include "../RecoverAction/ZoneCap.mqh"
 #include "../Filter/TimeFilter.mqh"
 #include "reportfunction.mqh"
+#include "stoplossprotectionfunction.mqh"
 
 class TradeHelper {
     private:
@@ -25,6 +26,11 @@ class TradeHelper {
         int currecover;
         datetime stopcreateOrderuntil;
         int presettrademode;
+        
+        int maxorderno;
+        int fixedordertype;
+        int buyorder;
+        int sellorder;
 
     TradeHelper() {
         lastsync = TimeCurrent();
@@ -32,6 +38,10 @@ class TradeHelper {
         period = PERIOD_M15;
         magicNumber = default_magicNumber;
         stopcreateOrderuntil = TimeCurrent();
+        curzone = 100;
+        currecover = 450;
+        maxorderno = 1;
+        fixedordertype = 2;
     }
 
 // self modify
@@ -39,6 +49,15 @@ class TradeHelper {
         totalsignal = 0;
         if (usebasicentry == 1)
             totalsignal++;
+        if (fixedordertype == 2) {
+         buyorder = 1;
+         sellorder = 1;
+        }
+        else if (fixedordertype == OP_BUY)
+         buyorder = 1;
+        else if (fixedordertype == OP_SELL)
+         sellorder = 1;
+        
         
         int currentsignali = 0;
         initSignal(currentsignali);
@@ -66,17 +85,17 @@ class TradeHelper {
     }
 
     void refreshRobot() {
-        if (!checkHasOrder()) {
+        if (checkAllOrderHasStopLossProtection()) {
             if (timeToCreateNewOrder(0) &&
                 tf_countRecoveryCurPair(symbol, magicNumber) < maxrecoverypair &&
                 tf_countOpenedCurPair(symbol, magicNumber) < maxopenedpair) {
                 createFirstOrder();
             }
 
-        } else {
-            checkHasOrderNextAction();
-        }
-
+        } 
+        
+        checkHasOrderNextAction();
+        
         if (lastsync < TimeCurrent())
         {
             rpt_syncclosedtrade();
@@ -85,10 +104,20 @@ class TradeHelper {
 
     }
 
+   /* // not using anymore
     bool checkHasOrder() {
         if (tf_countAllOrders(symbol, magicNumber) > 0)
             return true;
         return false;
+    }
+    */
+    
+    bool checkAllOrderHasStopLossProtection()
+    {
+      int torder = stoplossprotection_checkNoProtectOrdersWithMagicNumberRange(magicNumber, maxorderno);
+      if (torder > 0)
+         return false;
+      return true;
     }
 
     bool timeToCreateNewOrder(int type) {
@@ -106,21 +135,43 @@ class TradeHelper {
             be.Refresh();
         }
     }
+    
+    int fetchMagicNumberForThisTrade()
+    {
+      for (int i = magicNumber; i < magicNumber + maxorderno; i++)
+      {
+         int countno = tf_countAllOrders(symbol, i);
+         if (countno == 0)
+            return i;
+      }
+      return -1;
+    }
 
     void createFirstOrder() {
+        int thismagicnumber = fetchMagicNumberForThisTrade();
+        if (thismagicnumber == -1)
+            return;
+               
         int signalcount = ArraySize(signalist);
         for (int i = 0; i < signalcount; i++)
         {
             BaseSignal *bsignal = (BaseSignal *)signalist[i];
             signalRefresh(bsignal);
             
+            if (fixedordertype == OP_BUY && bsignal.signal != OP_BUY)
+               return;
+            if (fixedordertype == OP_SELL && bsignal.signal != OP_SELL)
+               return;
+               
+            
+            
             if (bsignal.signal != -1 && createOrderFilter(bsignal.signal, initlots))
             {
                 double curprice = MarketInfo(symbol, MODE_BID);
-                Print("Create order now " + bsignal.signal + "/" + curprice + "/" + bsignal.stoploss + "/" + bsignal.takeprofit + "/" + bsignal.signalname);
-                tf_createorder(symbol, bsignal.signal, initlots, "1", "", bsignal.stoploss, bsignal.takeprofit, bsignal.signalname, magicNumber);
+                Print("[" + thismagicnumber + "] Create order now " + bsignal.signal + "/" + curprice + "/" + bsignal.stoploss + "/" + bsignal.takeprofit + "/" + bsignal.signalname);
+                tf_createorder(symbol, bsignal.signal, initlots, "1", "", bsignal.stoploss, bsignal.takeprofit, bsignal.signalname, thismagicnumber);
                 trademode = presettrademode;
-                of_calTakeProfitOnAllOrders(symbol, magicNumber);
+                of_calTakeProfitOnAllOrders(symbol, thismagicnumber);
                 return;
             }
         }
@@ -134,16 +185,32 @@ class TradeHelper {
     }
 
     void checkHasOrderNextAction() {
-        int torders = tf_countAllOrders(symbol, magicNumber);
+         int torders = 0;
+        for (int imagicnumber = magicNumber; imagicnumber < magicNumber + maxorderno; imagicnumber++)
+        {
+            if (buyorder == 1) {
+               checkHasOrderNextActionForOrderTypeMagicNumber(imagicnumber, OP_BUY);
+            }
+            if (sellorder == 1) {
+               checkHasOrderNextActionForOrderTypeMagicNumber(imagicnumber, OP_SELL);
+            }
+        }
+        
+    }
+    
+    void checkHasOrderNextActionForOrderTypeMagicNumber(int _magicnumber, int _ordertype)
+    {
+        int torders = tf_countAllOrdersWithOrderType(symbol, _magicnumber, _ordertype);
         if (torders == 1)
         {
-            checkSignalCloseAction();
-            checkRecoverAction();
+            checkSignalCloseAction(_magicnumber, _ordertype);
+            checkRecoverAction(_magicnumber, _ordertype);
         }
         else if (torders > 1)
         {
-            checkRecoverAction();
+            checkRecoverAction(_magicnumber, _ordertype);
         }
+    
     }
 
     virtual void closeSignalRefresh(BaseSignal *bsignal)
@@ -156,7 +223,7 @@ class TradeHelper {
         
     }
 
-    void checkSignalCloseAction()
+    void checkSignalCloseAction(int _magicnumber, int _ordertype)
     {
         string orderparam[];
         //tf_findFirstOrder(symbol, magicNumber);
@@ -179,7 +246,7 @@ class TradeHelper {
         }
         if (resultsignal == 1)
         {
-            tf_closeAllOrders(symbol, magicNumber);
+            tf_closeAllOrdersWithOrderType(symbol, _magicnumber, _ordertype);
         }
         if (resultsignal == 2)
         {
@@ -188,7 +255,8 @@ class TradeHelper {
                 Martingale *martin = new Martingale();
                 martin.period = period;
                 martin.symbol = symbol;
-                martin.magicNumber = magicNumber;
+                martin.ordertype = _ordertype;
+                martin.magicNumber = _magicnumber;
                 martin.curzone = curzone;
                 martin.simplyDoRecovery();
                 delete(martin);
@@ -197,14 +265,15 @@ class TradeHelper {
     }
 
 // Self include this and modify
-    virtual void checkRecoverAction()
+    virtual void checkRecoverAction(int _magicnumber, int _ordertype)
     {
         if (trademode == martingale)
         {
             Martingale *martin = new Martingale();
             martin.period = period;
             martin.symbol = symbol;
-            martin.magicNumber = magicNumber;
+            martin.ordertype = _ordertype;
+            martin.magicNumber = _magicnumber;
             martin.curzone = curzone;
             martin.takeProfit();
             martin.doRecovery();
@@ -215,7 +284,7 @@ class TradeHelper {
             Zonecap *zc = new Zonecap();
             zc.period = period;
             zc.symbol = symbol;
-            zc.magicNumber = magicNumber;
+            zc.magicNumber = _magicnumber;
             zc.curzone = curzone;
             zc.takeProfit();
             zc.doRecovery();

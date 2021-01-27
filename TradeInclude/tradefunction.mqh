@@ -19,6 +19,21 @@ void tf_closeAllOrders(string symbol, int magicNumber) {
     }
 }
 
+void tf_closeAllOrdersWithOrderType(string _symbol, int _magicNumber, int _ordertype)
+{
+    for (int i = OrdersTotal() - 1; i >= 0; i--) {
+        OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
+        if (OrderMagicNumber() != _magicNumber || OrderSymbol() != _symbol)
+            continue;
+        if (OrderType() != _ordertype)
+            continue;
+
+        Print("Close this order @", i);
+        OrderClose(OrderTicket(), OrderLots(), OrderClosePrice(), 3, Red);
+        rpt_closedtrade(OrderSymbol(), OrderTicket(), OrderClosePrice(), OrderSwap(), OrderCommission(), OrderProfit());
+    }
+}
+
 int tf_countAllOrders(string symbol, int magicNumber) {
 
     int torders = 0;
@@ -85,6 +100,10 @@ void tf_setTakeProfitStopLoss(string symbol, int ordertype, int magicNumber, dou
             continue;
         if (OrderType() != OP_BUY && OrderType() != OP_SELL)
             continue;
+        if (stoploss == -1)
+         stoploss = OrderStopLoss();
+        if (takeprofit == -1)
+         takeprofit = OrderTakeProfit();
         OrderModify(OrderTicket(), OrderOpenPrice(), stoploss, takeprofit, 0, Yellow);
     }
 }
@@ -228,13 +247,13 @@ double tf_countAllLots(string symbol, int magicNumber) {
     return tlots;
 }
 
-double tf_countAllLotsWithActionType(int actiontype, string symbol, int magicNumber) {
+double tf_countAllLotsWithOrderType(string symbol, int magicNumber, int ordertype) {
     double tlots = 0;
     for (int i = 0; i < OrdersTotal(); i++) {
         OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
         if (OrderMagicNumber() != magicNumber || OrderSymbol() != symbol)
             continue;
-        if (OrderType() != OP_BUY && OrderType() != OP_SELL)
+        if (OrderType() != ordertype)
             continue;
         tlots = tlots + OrderLots();
     }
@@ -249,6 +268,20 @@ double tf_orderTotalProfit(string symbol, int magicNumber)
         if (OrderMagicNumber() != magicNumber || OrderSymbol() != symbol)
             continue;
         if (OrderType() != OP_BUY && OrderType() != OP_SELL)
+            continue;
+        tprofit += OrderProfit() + OrderSwap() + OrderCommission();
+    }
+    return tprofit;
+}
+
+double tf_orderTotalProfitWithOrderType(string symbol, int magicNumber, int ordertype)
+{
+    double tprofit = 0;
+    for (int i = 0; i < OrdersTotal(); i++) {
+        OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
+        if (OrderMagicNumber() != magicNumber || OrderSymbol() != symbol)
+            continue;
+        if (OrderType() != ordertype)
             continue;
         tprofit += OrderProfit() + OrderSwap() + OrderCommission();
     }
