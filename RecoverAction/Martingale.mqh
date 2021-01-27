@@ -11,6 +11,9 @@ class Martingale : public BaseRecovery {
       bool sellAfterBandClosed;
       bool buyAfterBandClosed;
       datetime lastchecking;
+      
+      double lastbuystoploss;
+      double lastsellstoploss;
 
     public:
       int ordertype;
@@ -21,6 +24,8 @@ class Martingale : public BaseRecovery {
     }
 
     void initHelper() {
+    lastbuystoploss= 0;
+    lastsellstoploss = 0;
     lastchecking = TimeCurrent();
     ordertype = -1;
     sellAfterBandClosed = false;
@@ -332,21 +337,23 @@ class Martingale : public BaseRecovery {
         double newprice = 0;
         if (OrderType() == OP_BUY) {
             newprice = closeprice - martingale_profitprotectionaddon * 10 /  tf_getCurrencryMultipier(symbol);
-            if (newprice < OrderStopLoss())
+            if (newprice <= lastbuystoploss && lastbuystoploss > 0)
                return false;
+            lastbuystoploss= newprice;
         }
         else {
             newprice = closeprice + martingale_profitprotectionaddon * 10 /  tf_getCurrencryMultipier(symbol);
-            if (newprice > OrderStopLoss())
+            if (newprice >= lastsellstoploss && lastsellstoploss > 0)
                return false;
+            lastsellstoploss = newprice;
         }
         
                
-        //Print(OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + closeprice);
+        
         if (diff *  tf_getCurrencryMultipier(symbol) > martingale_profitprotectiontrigger * 10)
         {
             // set order protection
-            
+            Print(OrderTicket() + " ::: " + OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + OrderStopLoss());
             //Print("Update now");
             //OrderModify(OrderTicket(), OrderOpenPrice(), newprice, 0, 0, Green);
             tf_setTakeProfitStopLoss(symbol, OrderType(), magicNumber, newprice, 0);
