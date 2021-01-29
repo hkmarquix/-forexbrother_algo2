@@ -6,6 +6,7 @@
 #property copyright "Copyright 2020, MetaQuotes Software Corp."
 #property link      "https://www.mql5.com"
 #property version   "1.00"
+#property date "2021-01-29"
 #property strict
 
 #include "config.mqh"
