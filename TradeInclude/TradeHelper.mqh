@@ -31,6 +31,8 @@ class TradeHelper {
         int fixedordertype;
         int buyorder;
         int sellorder;
+        
+        Martingale *martin;
 
     TradeHelper() {
         lastsync = TimeCurrent();
@@ -46,6 +48,7 @@ class TradeHelper {
 
 // self modify
     virtual void initHelper() {
+         martin = new Martingale();
         totalsignal = 0;
         if (usebasicentry == 1)
             totalsignal++;
@@ -82,6 +85,7 @@ class TradeHelper {
             BaseSignal *bsignal = (BaseSignal *)signalist[i];
             delete(bsignal);
         }
+        delete(martin);
     }
 
     void refreshRobot() {
@@ -172,6 +176,7 @@ class TradeHelper {
                 tf_createorder(symbol, bsignal.signal, initlots, "1", "", bsignal.stoploss, bsignal.takeprofit, bsignal.signalname, thismagicnumber);
                 trademode = presettrademode;
                 of_calTakeProfitOnAllOrders(symbol, thismagicnumber);
+                resetRecoverMemory();
                 return;
             }
         }
@@ -264,6 +269,11 @@ class TradeHelper {
         }
     }
 
+    void resetRecoverMemory()
+    {
+      martin.lastbuystoploss = 0;
+      martin.lastsellstoploss = 0;
+    }
 // Self include this and modify
     virtual void checkRecoverAction(int _magicnumber, int _ordertype)
     {

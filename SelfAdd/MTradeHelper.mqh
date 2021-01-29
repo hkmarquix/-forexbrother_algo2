@@ -16,7 +16,7 @@
 
 class MTradeHelper : public TradeHelper {
     private:
-            Martingale *martin;
+
     public:
         
     MTradeHelper() {
@@ -25,7 +25,7 @@ class MTradeHelper : public TradeHelper {
 
 // self modify
     void initHelper() {
-    martin = new Martingale();
+      martin = new Martingale();
         totalsignal = 0;
         if (usebasicentry == 1)
             totalsignal++;

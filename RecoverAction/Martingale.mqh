@@ -5,18 +5,19 @@
 #include "BaseRecovery.mqh"
 
 class Martingale : public BaseRecovery {
-    private:
+    protected:
       int strict_level;
       double price_distance;
       bool sellAfterBandClosed;
       bool buyAfterBandClosed;
       datetime lastchecking;
       
-      double lastbuystoploss;
-      double lastsellstoploss;
+      
 
     public:
       int ordertype;
+      double lastbuystoploss;
+      double lastsellstoploss;
 
     Martingale() {
 
@@ -312,7 +313,7 @@ class Martingale : public BaseRecovery {
     
     bool checkLastOrderForProfitProtection()
     {
-         if (TimeCurrent() - lastchecking <= 5)
+         if (TimeCurrent() - lastchecking <= 3)
             return false;
          lastchecking = TimeCurrent();
       
@@ -332,7 +333,13 @@ class Martingale : public BaseRecovery {
 
         }
         
-        
+        if (diff *  tf_getCurrencryMultipier(symbol) > martingale_profitprotectiontrigger * 10)
+        {
+        }
+        else
+        {
+            return false;
+        }
         
         double newprice = 0;
         if (OrderType() == OP_BUY) {
@@ -353,7 +360,7 @@ class Martingale : public BaseRecovery {
         if (diff *  tf_getCurrencryMultipier(symbol) > martingale_profitprotectiontrigger * 10)
         {
             // set order protection
-            Print(OrderTicket() + " ::: " + OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + OrderStopLoss());
+            writelog_writeline(OrderTicket() + " ::: " + OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + OrderStopLoss());
             //Print("Update now");
             //OrderModify(OrderTicket(), OrderOpenPrice(), newprice, 0, 0, Green);
             tf_setTakeProfitStopLoss(symbol, OrderType(), magicNumber, newprice, 0);
