@@ -3,10 +3,10 @@
 //|                        Copyright 2020, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
+// Modify date 2021-01-29 000
 #property copyright "Copyright 2020, MetaQuotes Software Corp."
 #property link      "https://www.mql5.com"
 #property version   "1.00"
-#property date "2021-01-29"
 #property strict
 
 #include "config.mqh"
@@ -191,7 +191,7 @@ void OnTick()
       else if (t_arr[i] == "H1")
         curperiod_arr[i] = PERIOD_H1;
       else if (t_arr[i] == "H4")
-        curperiod_arr[i] = PERIOD_M4;
+        curperiod_arr[i] = PERIOD_H4;
       else if (t_arr[i] == "D1")
         curperiod_arr[i] = PERIOD_D1;
     }
