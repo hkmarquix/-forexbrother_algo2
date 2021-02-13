@@ -16,8 +16,11 @@ extern double martingale_targetProfitForEachLot = 0; // targetProfitForEachLot t
 extern double martingale_targetProfitTotalPips = 0; // targetProfitTotalPips target pips  0 means disbale ::: << this will set TP for each order
 extern double martingale_targetProfitDropForEachOrder = 0; // no use 0 means disable : targetProfitDropForEachOrder
 
-extern double martingale_profitprotectiontrigger = 11; // profitprotectiontrigger 
-extern double martingale_profitprotectionaddon = 8; // profitprotectionaddon
+extern double martingale_profitprotectiontrigger = 8; // martin profitprotectiontrigger 
+extern double martingale_profitprotectionaddon = 4; // martin profitprotectionaddon
+
+extern double single_profitprotectiontrigger = 11; // normal profitprotectiontrigger 
+extern double single_profitprotectionaddon = 8; // normal profitprotectionaddon
 
 double zonecap_targetProfitForEachOrder = 3;
 

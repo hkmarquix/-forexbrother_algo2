@@ -321,6 +321,22 @@ class Martingale : public BaseRecovery {
          double closeprice;
          double diff;
          
+         double triggervalue = 0;
+         double addonvalue = 0;
+         
+         int order_count = tf_countAllOrdersWithOrderType(symbol, magicNumber, OrderType());
+         if (order_count == 1)
+         {
+            triggervalue = single_profitprotectiontrigger;
+            addonvalue = single_profitprotectionaddon;
+         }
+         else
+         {
+            triggervalue = martingale_profitprotectiontrigger;
+            addonvalue = martingale_profitprotectionaddon;
+         }
+         
+         
          double averageopenprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, OrderType());
          
          if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
@@ -340,7 +356,7 @@ class Martingale : public BaseRecovery {
         }
         
         
-        if (diff *  tf_getCurrencryMultipier(symbol) > martingale_profitprotectiontrigger * 10)
+        if (diff *  tf_getCurrencryMultipier(symbol) > triggervalue * 10)
         {
         }
         else
@@ -352,14 +368,14 @@ class Martingale : public BaseRecovery {
         
         double newprice = 0;
         if (OrderType() == OP_BUY) {
-            newprice = closeprice - martingale_profitprotectionaddon * 10 /  tf_getCurrencryMultipier(symbol);
+            newprice = closeprice - addonvalue * 10 /  tf_getCurrencryMultipier(symbol);
             //if (newprice <= lastbuystoploss && lastbuystoploss > 0)
             if (newprice <= OrderStopLoss() && OrderStopLoss() > 0)
                return false;
             lastbuystoploss= newprice;
         }
         else {
-            newprice = closeprice + martingale_profitprotectionaddon * 10 /  tf_getCurrencryMultipier(symbol);
+            newprice = closeprice + addonvalue * 10 /  tf_getCurrencryMultipier(symbol);
             //if (newprice >= lastsellstoploss && lastsellstoploss > 0)
             if (newprice >= OrderStopLoss() && OrderStopLoss() > 0)
                return false;
@@ -368,10 +384,10 @@ class Martingale : public BaseRecovery {
         
                
         
-        if (diff *  tf_getCurrencryMultipier(symbol) > martingale_profitprotectiontrigger * 10)
+        if (diff *  tf_getCurrencryMultipier(symbol) > triggervalue * 10)
         {
             // set order protection
-            writelog_writeline(OrderTicket() + " ::: " + OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + OrderStopLoss());
+            //writelog_writeline(OrderTicket() + " ::: " + OrderType() + " Open Price: " + OrderOpenPrice() + " new price: " + newprice + " Set stop loss  current: " + OrderStopLoss());
             //Print("Update now");
             //OrderModify(OrderTicket(), OrderOpenPrice(), newprice, 0, 0, Green);
             tf_setTakeProfitStopLoss(symbol, OrderType(), magicNumber, newprice, 0);

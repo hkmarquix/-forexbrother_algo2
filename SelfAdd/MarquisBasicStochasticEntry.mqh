@@ -76,23 +76,30 @@ class MarquisBasicStochasticEntry : public BaseSignal {
        tradeparam= "";
        signal = -1;
 
-       /*if (DayOfWeek() == 5 && TimeHour(TimeCurrent()) >= 21)
+       if (DayOfWeek() == 5 && TimeHour(TimeCurrent()) >= 21)
        {
            return;
        }
-       if (TimeHour(TimeCurrent() >= 22))
+       if (TimeHour(TimeCurrent()) >= 22)
        {
          return;
        }
-       if (TimeHour(TimeCurrent() <= 3))
+       if (TimeHour(TimeCurrent()) <= 9)
        {
          return;
-       }*/
+       }
        
-       needRecoveryAction(0);
-       //m15MacdFilter();
+       //needRecoveryAction(0);
+       int sec = TimeSeconds(TimeCurrent());
+       if (sec % 2 == 0)
+         signal = OP_BUY;
+       else
+         signal = OP_SELL;
+         atrFilter();
+       m15MacdFilter();
        emaFilter(period);
-       emaFilter(PERIOD_H1);
+       emaFilter(PERIOD_M15);
+       //emaFilter1();
         
        if (signal != -1)
        {
@@ -104,6 +111,13 @@ class MarquisBasicStochasticEntry : public BaseSignal {
 
         
     }
+    
+    void atrFilter()
+    {
+      double iatr = iATR(symbol, PERIOD_M5, 14, 0);
+      if (iatr < 2)
+         signal = -1;
+    }
 
     void RefreshCloseSignal(int actiontype, double entryprice)
     {
@@ -113,15 +127,26 @@ class MarquisBasicStochasticEntry : public BaseSignal {
     
     void m15MacdFilter()
     {
-         double macdm_s0 = iMACD(symbol, PERIOD_M15, 12, 26, 9, PRICE_CLOSE, MODE_MAIN, 0);
-         if (macdm_s0 > 0 && signal == OP_SELL)
+      if (signal == -1)
+         return;
+         double macdm_0 = iMACD(symbol, PERIOD_M15, 12, 26, 9, PRICE_CLOSE, MODE_MAIN, 0);
+        double macds_0 = iMACD(symbol, PERIOD_M15, 12, 26, 9, PRICE_CLOSE, MODE_SIGNAL, 0);
+        double macdm_1 = iMACD(symbol, PERIOD_M15, 12, 26, 9, PRICE_CLOSE, MODE_MAIN, 1);
+        double macds_1 = iMACD(symbol, PERIOD_M15, 12, 26, 9, PRICE_CLOSE, MODE_SIGNAL, 1); 
+         if (macdm_0 > 0 && signal == OP_SELL)
             signal = -1;
-         else if (macdm_s0 <  0 && signal == OP_BUY)
+         else if (macdm_0 <  0 && signal == OP_BUY)
             signal = -1;
+        if ( signal == OP_BUY && macdm_0 > 0 && MathAbs(macdm_0 - macds_0) < MathAbs(macdm_1 - macds_1))
+         signal = -1;
+        if ( signal == OP_SELL && macdm_0 < 0 && MathAbs(macdm_0 - macds_0) < MathAbs(macdm_1 - macds_1))
+         signal = -1;
     }
     
     void emaFilter(int _period)
     {
+    if (signal == -1)
+         return;
       double ema80_5 = iMA(symbol, _period, 80, 0, MODE_EMA, PRICE_CLOSE, 0);
       double ema80_5_1 = iMA(symbol, _period, 80, 0, MODE_EMA, PRICE_CLOSE, 1);
       double ema80_5_2 = iMA(symbol, _period, 80, 0, MODE_EMA, PRICE_CLOSE, 2);
@@ -145,28 +170,51 @@ class MarquisBasicStochasticEntry : public BaseSignal {
             signal = -1;
          }
       }
+      
+      
+    }
+    
+    void emaFilter1()
+    {
+    if (signal == -1)
+         return;
+      double ema80_5 = iMA(symbol, period, 80, 0, MODE_EMA, PRICE_CLOSE, 0);
+      if (signal == OP_SELL && MarketInfo(symbol, MODE_BID) < ema80_5 + 1 * 0.18)
+      {
+        // time to sell (martingale)
+        signal = -1;
+      }
+      //else if (cprice < maend - iatr * 0.25 && (maend - mastart) > -1)
+      else if (signal == OP_BUY && MarketInfo(symbol, MODE_ASK) > ema80_5 - 1 * 0.18)
+      {
+        // time to buy (martingale)
+        signal = -1;
+      }
     }
     
     
-    bool macdvertex(int actiontype, double macdm_s0, double macds_s0, double macdm_s1, double macds_s1, double macdm_s2, double macds_s2, double factor)
+    bool macdvertex(int actiontype, double macdm_s0, double macds_s0, double macdm_s1, double macds_s1, double macdm_s2, double macds_s2, double factor, double factor2)
     {
+      if (MathAbs(macdm_s0) < 0.5)
+         return false;
+    
       if (actiontype == OP_SELL && macdm_s0 > 0 && macdm_s1 > 0 && macdm_s2 > 0 &&
-         macdm_s0 < macdm_s1 * factor && macdm_s1* factor > macdm_s2 && macdm_s0 > macds_s0 && macdm_s1 > macds_s1  && macdm_s2 > macds_s2)
+         macdm_s0 < macdm_s1 * factor && macdm_s1* factor2 > macdm_s2 && macdm_s0 > macds_s0 && macdm_s1 > macds_s1  && macdm_s2 > macds_s2)
          {
             return true;
          } 
       if (actiontype == OP_SELL && macdm_s0 < 0 && macdm_s1 < 0 && macdm_s2 < 0 &&
-         macdm_s0 * factor < macdm_s1 && macdm_s1 > macdm_s2 * factor && macdm_s0 > macds_s0 && macdm_s1 > macds_s1  && macdm_s2 > macds_s2)
+         macdm_s0 * factor < macdm_s1 && macdm_s1 > macdm_s2 * factor2 && macdm_s0 > macds_s0 && macdm_s1 > macds_s1  && macdm_s2 > macds_s2)
          {
             return true;
          } 
       if (actiontype == OP_BUY && macdm_s0 < 0 && macdm_s1 < 0 && macdm_s2 < 0 &&
-         macdm_s0 > macdm_s1 * factor && macdm_s1 * factor < macdm_s2 && macdm_s0 < macds_s0 && macdm_s1 < macds_s1  && macdm_s2 < macds_s2)
+         macdm_s0 > macdm_s1 * factor && macdm_s1 * factor2 < macdm_s2 && macdm_s0 < macds_s0 && macdm_s1 < macds_s1  && macdm_s2 < macds_s2)
          {
             return true;
          } 
       if (actiontype == OP_BUY && macdm_s0 > 0 && macdm_s1 > 0 && macdm_s2 > 0 &&
-         macdm_s0 * factor > macdm_s1 && macdm_s1 < macdm_s2 * factor && macdm_s0 < macds_s0 && macdm_s1 < macds_s1  && macdm_s2 < macds_s2)
+         macdm_s0 * factor > macdm_s1 && macdm_s1 < macdm_s2 * factor2 && macdm_s0 < macds_s0 && macdm_s1 < macds_s1  && macdm_s2 < macds_s2)
          {
             return true;
          } 
@@ -241,13 +289,13 @@ class MarquisBasicStochasticEntry : public BaseSignal {
                return true;
          }
 */
-         if (macdvertex(OP_BUY, macdm_s0, macds_s0, macdm_s1, macds_s1, macdm_s3, macds_s3, 0.90) && macdm_s0 < 0)
+         if (macdvertex(OP_BUY, macdm_s0, macds_s0, macdm_s1, macds_s1, macdm_s3, macds_s3, 0.85, 1) && macdm_s0 < 0)
          {
             logtrade(StringFormat("macd vertext, [BUY], %.5f,%.5f | %.5f,%.5f | %.5f,%.5f", macdm_s0, macds_s0, macdm_s1, macds_s1, macdm_s3, macds_s3));
             signal = OP_BUY;
             return true;
          }
-         if (macdvertex(OP_SELL, macdm_s0, macds_s0, macdm_s1, macds_s1, macdm_s3, macds_s3, 0.90) && macdm_s0 > 0)
+         if (macdvertex(OP_SELL, macdm_s0, macds_s0, macdm_s1, macds_s1, macdm_s3, macds_s3, 0.85, 1) && macdm_s0 > 0)
          {
             logtrade(StringFormat("macd vertext, [SELL], %.5f,%.5f | %.5f,%.5f | %.5f,%.5f", macdm_s0, macds_s0, macdm_s1, macds_s1, macdm_s3, macds_s3));
             signal = OP_SELL;
@@ -277,7 +325,7 @@ class MarquisBasicStochasticEntry : public BaseSignal {
          if (MathAbs(macdm_s0 - macds_s0) > MathAbs(macdm_s1 - macds_s1))
             return false;
         */
-        if (MarketInfo(symbol, MODE_BID) < lval - iatr && macdm_s0 < 0)
+        /*if (MarketInfo(symbol, MODE_BID) < lval - iatr && macdm_s0 < 0)
         {
             
             if (uval > uval1 && lval < lval1 && buyAfterBandClosed == false)
@@ -318,7 +366,7 @@ class MarquisBasicStochasticEntry : public BaseSignal {
            
            signal  = OP_SELL;
            return true;
-        }
+        }*/
 
         
         return false;

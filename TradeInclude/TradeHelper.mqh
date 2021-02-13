@@ -271,7 +271,7 @@ class TradeHelper {
     
     void resetRecoverMemory()
     {
-      writelog_writeline("Reset stoploss");
+      //writelog_writeline("Reset stoploss");
       martin.lastbuystoploss = 0;
       martin.lastsellstoploss = 0;
     }
