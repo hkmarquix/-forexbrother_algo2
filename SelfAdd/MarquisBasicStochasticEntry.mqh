@@ -47,10 +47,11 @@ class MarquisBasicStochasticEntry : public BaseSignal {
     {
       tradeparam= "";
       signal = -1;
-      
-      signal = candleEntryMethod(symbol, period);
-    
-    
+      int sec = TimeSeconds(TimeCurrent());
+      if (sec % 2 == 0)
+       signal = OP_BUY;
+      else 
+        signal  = OP_SELL;
     }
     
 
