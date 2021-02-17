@@ -5,16 +5,9 @@
 int stoplossprotection_checkNoProtectOrdersWithMagicNumberRange(int _magicnumber, int len)
 {
    int torder = 0;
-   bool foundmgno = false;
-   for (int i = 0; i < OrdersTotal(); i++)
+   for (int imm = _magicnumber; imm < _magicnumber + len; imm++)
    {
-      OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
-      for (int imm = _magicnumber; imm < _magicnumber + len; imm++)
-      {
-         if (OrderMagicNumber() == imm)
-            foundmgno = true;
-      }
-      torder += stoplossprotection_checkOrderHasNoProtection("", OrderMagicNumber(), -1);
+      torder += stoplossprotection_checkOrderHasNoProtection("", imm, -1);
    }
    
    return torder;

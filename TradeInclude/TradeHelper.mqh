@@ -87,12 +87,28 @@ class TradeHelper {
         }
         delete(martin);
     }
+    
+    void findOldOrders()
+    {
+      for (int i = 0; i < OrdersTotal(); i++)
+      {
+         OrderSelect(i, SELECT_BY_POS, MODE_TRADES);
+         datetime dd = OrderOpenTime();
+         if (dd + 10* 24* 60 * 60 < TimeCurrent())
+         {
+            Print("Order opened for long time:" + OrderTicket());
+         }
+      }
+    }
 
     void refreshRobot() {
+         //findOldOrders();
         if (checkAllOrderHasStopLossProtection()) {
-            if (timeToCreateNewOrder(0) &&
-                tf_countRecoveryCurPair(symbol, magicNumber) < maxrecoverypair &&
-                tf_countOpenedCurPair(symbol, magicNumber) < maxopenedpair) {
+            if (timeToCreateNewOrder(0) 
+                //  &&
+                //tf_countRecoveryCurPair(symbol, magicNumber) < maxrecoverypair &&
+                //tf_countOpenedCurPair(symbol, magicNumber) < maxopenedpair
+                ) {
                 createFirstOrder();
             }
 
@@ -173,7 +189,7 @@ class TradeHelper {
             {
                 double curprice = MarketInfo(symbol, MODE_BID);
                 Print("[" + thismagicnumber + "] Create order now " + bsignal.signal + "/" + curprice + "/" + bsignal.stoploss + "/" + bsignal.takeprofit + "/" + bsignal.signalname);
-                tf_createorder(symbol, bsignal.signal, initlots, "1", "", bsignal.stoploss, bsignal.takeprofit, bsignal.signalname, thismagicnumber);
+                tf_createorder(symbol, bsignal.signal, initlots, "1", bsignal.tradeparam, bsignal.stoploss, bsignal.takeprofit, bsignal.signalname, thismagicnumber);
                 trademode = presettrademode;
                 of_calTakeProfitOnAllOrders(symbol, thismagicnumber);
                 resetRecoverMemory();

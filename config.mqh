@@ -53,7 +53,7 @@ int currenttrademode = 1;
 
 int maxCommentLevel = 20;
 
-extern string curlist = "EURUSD,GBPUSD,EURJPY"; // curlist ex:  XAUUSD,EURUSD,USDJPY
+extern string curlist = "XAUUSD"; // curlist ex:  XAUUSD,EURUSD,USDJPY
 extern string curordertype = "2,2,2"; // ordertype: 0 -> Buy; 1 -> Sell; 2 -> Both
 extern string curmagicnumber = "18000,19000,20000"; // magicnumber list
 extern string curmaxorderno = "1,1,1"; // max no of order

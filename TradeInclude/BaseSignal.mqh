@@ -7,6 +7,7 @@ class BaseSignal {
     private:
           
     public:
+      string tradeparam;
         int signalid;
         int signal;
         int closesignal;
@@ -25,6 +26,7 @@ class BaseSignal {
         int magicNumber;
 
     BaseSignal() {
+    tradeparam = "";
         signalname = "";
         signalid = -1;
         signal = -1;

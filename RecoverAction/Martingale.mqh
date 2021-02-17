@@ -74,12 +74,17 @@ class Martingale : public BaseRecovery {
 
     int doRecovery() {
         double topenorders = tf_countAllOrdersWithOrderType(symbol, magicNumber, ordertype);
+        /*if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
+        {
+            return -1;
+        }
+        */
+        checkLastOrderForProfitProtection();
+        
         if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
         {
             return -1;
         }
-        
-        checkLastOrderForProfitProtection();
         
         if (OrderProfit() > 0) {
             return -1;
@@ -273,7 +278,7 @@ class Martingale : public BaseRecovery {
         return true;
         
     }
-
+    
     /*
 
         0.01 0.02 0.04 0.08 -> 0.16
@@ -291,7 +296,7 @@ class Martingale : public BaseRecovery {
         Print("wilsonNewMartingaleLotsizeCalculation " + martingaletype);
         if (martingaletype == 1)
         {
-            ntlots =  initlots + initlotstep + torder * lotincrease_step;
+            ntlots =  lastOpenLots + initlotstep + torder * lotincrease_step;
         }
         else if (martingaletype == 2)
         {
@@ -324,7 +329,11 @@ class Martingale : public BaseRecovery {
          double triggervalue = 0;
          double addonvalue = 0;
          
-         int order_count = tf_countAllOrdersWithOrderType(symbol, magicNumber, OrderType());
+         if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
+            return false;
+         int _ordertype = OrderType();
+         
+         int order_count = tf_countAllOrdersWithOrderType(symbol, magicNumber, _ordertype);
          if (order_count == 1)
          {
             triggervalue = single_profitprotectiontrigger;
@@ -337,8 +346,8 @@ class Martingale : public BaseRecovery {
          }
          
          
-         double averageopenprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, OrderType());
-         
+         double averageopenprice = tf_averageOpenPriceWithOrderType(symbol, magicNumber, _ordertype);
+            
          if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
             return false;
             
