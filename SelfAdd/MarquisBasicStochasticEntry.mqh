@@ -7,9 +7,7 @@
 
 #include "../TradeInclude/BaseSignal.mqh"
 #include "../TradeInclude/tradefunction.mqh"
-#import "CandleRecoverDecision.ex4"
-int candleEntryMethod(string symbol, int period);
-#import
+
 
 class MarquisBasicStochasticEntry : public BaseSignal {
     private:

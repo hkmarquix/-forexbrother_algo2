@@ -3,9 +3,6 @@
 #property strict
 
 #include "../RecoverAction/Martingale.mqh"
-#import "CandleRecoverDecision.ex4"
-int candleRecoverDecision(int actiontype, string symbol, int period);
-#import
 
 class MMartingale : public Martingale {
     private:
@@ -78,7 +75,7 @@ class MMartingale : public Martingale {
     
     void refreshSignal(int actiontype)
     {
-      signal = candleRecoverDecision(actiontype, symbol, period);
+      signal = actiontype;
 
     }
 };

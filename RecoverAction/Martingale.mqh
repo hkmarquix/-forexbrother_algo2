@@ -10,8 +10,6 @@ class Martingale : public BaseRecovery {
       double price_distance;
       bool sellAfterBandClosed;
       bool buyAfterBandClosed;
-      datetime lastchecking;
-      
       
 
     public:
@@ -27,7 +25,6 @@ class Martingale : public BaseRecovery {
     void initHelper() {
     lastbuystoploss= 0;
     lastsellstoploss = 0;
-    lastchecking = TimeCurrent();
     ordertype = -1;
     sellAfterBandClosed = false;
     buyAfterBandClosed = false;
@@ -79,7 +76,6 @@ class Martingale : public BaseRecovery {
             return -1;
         }
         */
-        checkLastOrderForProfitProtection();
         
         if (!of_selectlastorderWithOrderType(symbol, magicNumber, ordertype))
         {
@@ -319,10 +315,7 @@ class Martingale : public BaseRecovery {
     
     bool checkLastOrderForProfitProtection()
     {
-         if (TimeCurrent() - lastchecking <= 3)
-            return false;
-         lastchecking = TimeCurrent();
-      
+
          double closeprice;
          double diff;
          

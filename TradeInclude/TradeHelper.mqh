@@ -14,6 +14,7 @@
 class TradeHelper {
     private:
         datetime lastsync;
+        datetime lastcheckprotection;
 
     public:
         BaseSignal *signalist[];
@@ -34,7 +35,7 @@ class TradeHelper {
         Martingale *martin;
 
     TradeHelper() {
-       
+        lastcheckprotection = TimeCurrent();
         lastsync = TimeCurrent();
         symbol = "EURUSD";
         period = PERIOD_M15;
@@ -115,6 +116,7 @@ class TradeHelper {
         } 
         
         checkHasOrderNextAction();
+        checkLastOrderForProfitProtection();
         
         if (lastsync < TimeCurrent())
         {
@@ -328,6 +330,39 @@ class TradeHelper {
         }
     }
 
+    void checkLastOrderForProfitProtection()
+    {
+      if (TimeCurrent() - lastcheckprotection < 5)
+         return;
+      lastcheckprotection = TimeCurrent();
+      
+      for (int imagicnumber = magicNumber; imagicnumber < magicNumber + maxorderno; imagicnumber++)
+     {
+         if (buyorder == 1) {
+            if (trademode == martingale)
+            {
+               martin.period = period;
+               martin.symbol = symbol;
+               martin.ordertype = OP_BUY;
+               martin.magicNumber = imagicnumber;
+               martin.curzone = curzone;
+               martin.checkLastOrderForProfitProtection();
+            }
+         }
+         if (sellorder == 1) {
+            if (trademode == martingale)
+            {
+               martin.period = period;
+               martin.symbol = symbol;
+               martin.ordertype = OP_SELL;
+               martin.magicNumber = imagicnumber;
+               martin.curzone = curzone;
+               martin.checkLastOrderForProfitProtection();
+            }
+         }
+     }
+     
+    }
 
 
 
